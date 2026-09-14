@@ -1,40 +1,34 @@
 import * as THREE from 'three';
 
-import { eggHeight, eggWireframe, shapeEgg, WIRE_PROFILE } from '../core/shape.js';
+import { EGG_HEIGHT } from '../core/shape.js';
 import { PLAYER } from '../core/tuning.js';
-import { fill, segments, wire } from './materials.js';
+import { segments, wire } from './materials.js';
+import { createShell } from './shell.js';
 import { THEME } from './theme.js';
 
 /** The shaped shell has its own height; the egg has to fit the collider. */
-export const EGG_SCALE = PLAYER.height / eggHeight();
-const WIRE = { meridians: 13, rings: 5, steps: 26, arc: 30 };
+export const EGG_SCALE = PLAYER.height / EGG_HEIGHT;
 
+/**
+ * Marc, as he is, in a world that is not. The shell is the asset — same
+ * geometry, same speckled skin, same physical material — and the only thing
+ * added is a rim of green light around it, because the lighting in here is
+ * green and the shell should admit it.
+ */
 export function createEgg() {
   const egg = new THREE.Group();
   egg.name = 'egg';
 
-  const solid = new THREE.SphereGeometry(0.97, 20, 14);
-  shapeEgg(solid.attributes.position.array, WIRE_PROFILE);
-  solid.computeVertexNormals();
-  const shell = new THREE.Mesh(solid, fill(THEME.void));
-  shell.name = 'shell';
-  /** The fill goes down first and writes depth; the lines, which do not,
-   *  then draw over the front of it and get depth-tested off the back. */
-  shell.renderOrder = -1;
-
-  const lines = segments(eggWireframe(WIRE), wire(THEME.wire));
-  lines.name = 'wireframe';
-
-  const halo = segments(eggWireframe({ meridians: 7, rings: 2, steps: 16, arc: 20 }), wire(THEME.glow, 0.3));
-  halo.scale.setScalar(1.06);
+  const shell = createShell();
 
   const body = new THREE.Group();
-  body.add(shell, lines, halo);
   body.name = 'body';
+  body.add(shell.mesh);
+
   egg.add(body);
   egg.scale.setScalar(EGG_SCALE);
 
-  return { object: egg, body, lines, halo };
+  return { object: egg, body, shell };
 }
 
 /** The ring the egg casts on whatever it is standing over. */
