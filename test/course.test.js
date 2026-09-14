@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { createCourse } from '../src/core/course.js';
-import { APEX, AIRTIME, LANES, LANE_WIDTH, laneX, speedAt } from '../src/core/tuning.js';
+import { APEX, AIRTIME, laneBounds, LANES, LANE_WIDTH, laneX, speedAt } from '../src/core/tuning.js';
 
 const SEEDS = [1, 2, 3, 7, 42, 1024, 65535];
 
@@ -70,8 +70,11 @@ describe('course', () => {
       for (const seg of laidOut(seed).segments) {
         assert.ok(seg.span >= 1 && seg.span <= LANES);
         assert.ok(seg.lane >= 0 && seg.lane + seg.span <= LANES);
-        assert.equal(seg.xMin, laneX(seg.lane) - LANE_WIDTH / 2);
-        assert.equal(seg.xMax, laneX(seg.lane + seg.span - 1) + LANE_WIDTH / 2);
+        const { xMin, xMax } = laneBounds(seg.lane, seg.span);
+        assert.equal(seg.xMin, xMin);
+        assert.equal(seg.xMax, xMax);
+        assert.ok(seg.xMin < seg.xMax, 'a slab whose edges came out the wrong way round');
+        assert.equal(seg.xMax - seg.xMin, seg.span * LANE_WIDTH);
       }
     }
   });

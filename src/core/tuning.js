@@ -7,9 +7,31 @@
 export const LANES = 3;
 export const LANE_WIDTH = 2;
 
-/** Lane index → world x. Lane 1 is the middle of a three-lane course. */
+/**
+ * Lane index → world x. Lane 1 is the middle of a three-lane course, and lane
+ * 0 is the one on the left of the screen.
+ *
+ * It descends, which looks wrong written down and is the only thing that plays
+ * right: the egg runs towards +z and the chase camera sits behind it looking
+ * the same way, so the view is mirrored — world +x draws on the left. An
+ * ascending mapping put lane 0 on the right, and `left` moved the egg right.
+ */
 export function laneX(lane) {
-  return (lane - (LANES - 1) / 2) * LANE_WIDTH;
+  return ((LANES - 1) / 2 - lane) * LANE_WIDTH;
+}
+
+/**
+ * The world x a run of lanes covers, low edge first. laneX descends, so the
+ * first lane holds the high edge and the two swap on the way out — everything
+ * that tests a point against a slab wants them the other way round.
+ */
+export function laneBounds(lane, span = 1) {
+  const near = laneX(lane);
+  const far = laneX(lane + span - 1);
+  return {
+    xMin: Math.min(near, far) - LANE_WIDTH / 2,
+    xMax: Math.max(near, far) + LANE_WIDTH / 2,
+  };
 }
 
 /**
@@ -48,7 +70,8 @@ export const SNAP = 0.55;
 
 export const LIVES = 3;
 export const INVULNERABLE = 1.6;
-export const SCORE = { perMetre: 1, perBit: 25 };
+/** A metre, a bit, and an agent brought down with a slam. */
+export const SCORE = { perMetre: 1, perBit: 25, perAgent: 60 };
 
 /** How much course is kept live around the egg. */
 export const AHEAD = 180;

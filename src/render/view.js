@@ -4,14 +4,8 @@ import { approach, clamp, spring } from '../core/motion.js';
 import { laneX, PLAYER } from '../core/tuning.js';
 import { createEgg, createShadow, EGG_SCALE } from './egg.js';
 import { createBit, createHazard, createSlab, createUnderGrid, disposeSlab } from './props.js';
+import { focus as aimAt, rigFor, seat } from './rig.js';
 
-/**
- * Two framings. A phone held upright has a narrow, tall window: the same
- * camera puts half the screen in the sky, so it gets pulled in, lifted, and
- * tilted down until the track fills the frame again.
- */
-const WIDE = { back: 6.8, up: 2.45, lead: 8, aim: 1.1 };
-const TALL = { back: 5.8, up: 3.3, lead: 5, aim: 0.2 };
 const CHASE = 6;
 const DRAW = { behind: 12, ahead: 130 };
 /** How hard the shell rocks while it runs, and how fast. */
@@ -64,7 +58,7 @@ export function createView({ scene, camera, studio }) {
 
   const squash = { p: 0, v: 0 };
   const target = new THREE.Vector3();
-  const focus = new THREE.Vector3();
+  const aim = new THREE.Vector3();
 
   let level = 0;
   let placed = false;
@@ -188,8 +182,17 @@ export function createView({ scene, camera, studio }) {
       squash.v = 0;
       tumble = 0;
       shake = 0;
+      level = 0;
       placed = false;
     },
+
+    /**
+     * Cut to the egg rather than chase it. A respawn puts it down metres
+     * further on, and a camera that eases after it spends a second with the
+     * egg off the top of the frame — running blind, on a course that is not
+     * waiting.
+     */
+    snap() { placed = false; },
 
     sync(snapshot, dt, time) {
       const { course, player } = snapshot;
@@ -204,20 +207,15 @@ export function createView({ scene, camera, studio }) {
       if (player.grounded) level = approach(level, player.y, 6, dt);
       shake = approach(shake, 0, 6, dt);
 
-      const rig = camera.aspect < 1 ? TALL : WIDE;
-      target.set(
-        player.x * 0.4 + (Math.random() - 0.5) * shake * 0.7,
-        Math.max(player.y, level - 0.8) + rig.up + (Math.random() - 0.5) * shake * 0.5,
-        player.z - rig.back,
-      );
+      const rig = rigFor(camera.aspect);
+      seat(target, player, level, rig, shake);
       if (placed) camera.position.lerp(target, 1 - Math.exp(-dt * CHASE));
       else {
         camera.position.copy(target);
         placed = true;
       }
 
-      focus.set(player.x * 0.55, level + rig.aim, player.z + rig.lead);
-      camera.lookAt(focus);
+      camera.lookAt(aimAt(aim, player, level, rig));
     },
   };
 }

@@ -34,12 +34,22 @@ export function createHud(doc = document, lives = 3) {
     return PIP.repeat(Math.max(0, left)) + `<span class="spent">${PIP.repeat(Math.max(0, lives - left))}</span>`;
   }
 
+  /** The readouts are written sixty times a second and change a handful of
+   *  times a run, so each one only touches the DOM when its text moves. */
+  const shown = {};
+  function put(node, key, value, html = false) {
+    if (shown[key] === value) return;
+    shown[key] = value;
+    if (html) node.innerHTML = value;
+    else node.textContent = value;
+  }
+
   return {
     update(snapshot) {
-      score.textContent = String(snapshot.score);
-      depth.textContent = metres(snapshot.distance);
-      bits.textContent = String(snapshot.bits);
-      shells.innerHTML = pips(snapshot.lives);
+      put(score, 'score', String(snapshot.score));
+      put(depth, 'depth', metres(snapshot.distance));
+      put(bits, 'bits', String(snapshot.bits));
+      put(shells, 'shells', pips(snapshot.lives), true);
     },
 
     ready(best) {
@@ -62,6 +72,8 @@ export function createHud(doc = document, lives = 3) {
         ['score', snapshot.score],
         ['depth', metres(snapshot.distance)],
         ['bits', snapshot.bits],
+        /** Agents only earn a column on a run that broke one. */
+        ...(snapshot.agents > 0 ? [['agents', snapshot.agents]] : []),
         ['best', best],
       ].map(([label, value]) => stat(label, value)).join('');
       play.textContent = 'again';

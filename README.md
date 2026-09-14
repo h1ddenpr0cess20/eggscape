@@ -34,7 +34,7 @@ No API keys, no server, no account. It is a static page and three.js.
 |---|---|
 | `A` `D` / `←` `→` | one lane, per press |
 | `W` / `↑` / `space` | jump — again in the air for a flip |
-| `S` / `↓` | slam down |
+| `S` / `↓` | slam down — onto an agent to break it |
 | `M` | audio |
 
 On a phone: swipe for a lane, flick up to jump, flick down to slam, tap for a
@@ -42,8 +42,13 @@ jump.
 
 Three shells. An agent costs one, so does the void, and either way the egg is
 put back down and keeps going until the last one. A metre is a point, a bit is
-twenty-five, and speed climbs with distance — so the course gets harder because
+twenty-five, and an agent you come down on — in the air, slam on — is sixty and
+one fewer agent. Speed climbs with distance, so the course gets harder because
 you are getting faster, and the gaps grow to match.
+
+The slam is the only move that answers back. Jump over an agent, put it on, and
+the landing goes through the deck and takes the agent in that lane with it —
+your lane only, and only a couple of metres of it, so it has to be aimed.
 
 <p align="center">
   <img src="docs/screenshots/mobile.png" alt="Eggscape on a phone" width="300">
@@ -73,6 +78,7 @@ src/
   render/             three.js. Reads snapshots, owns no game state
     scene.js            Renderer, camera, fog, backdrop, and the light for the egg
     view.js             Snapshot → scene graph, and the chase camera
+    rig.js              Where that camera sits and what it looks at, as arithmetic
     egg.js              Marc, fitted to the collider
     shell.js            His geometry and material, carried over as they are
     skin.js             His speckled cream, painted onto a canvas
@@ -94,6 +100,14 @@ step higher than the jump can rise: both come out of the same `tuning.js` the
 physics uses, and the tests check every seed against them. Slabs never overlap
 in z, so there is no wall to run into — miss a jump and you meet the void,
 which is a fair thing to lose to.
+
+One number in there is worth the warning it carries. `laneX` *descends* — lane
+0 sits at the highest x — because the egg runs towards +z and the camera chases
+it from behind, looking the same way, which mirrors the picture: world +x draws
+on the left of the screen. Written the intuitive way round, every lane control
+is backwards and nothing in the core notices. `test/rig.test.js` projects a
+lane through the real rig and checks which half of the frame it lands on, which
+is the only place the mistake is visible.
 
 There is also an autopilot in `test/helpers/pilot.js`. It plays badly on
 purpose — one frame of lookahead, no double jump — and the suite fails if it
