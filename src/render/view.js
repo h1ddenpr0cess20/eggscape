@@ -14,7 +14,8 @@ const WIDE = { back: 6.8, up: 2.45, lead: 8, aim: 1.1 };
 const TALL = { back: 5.8, up: 3.3, lead: 5, aim: 0.2 };
 const CHASE = 6;
 const DRAW = { behind: 12, ahead: 130 };
-const ROLL_RADIUS = 0.5;
+/** The shell's own half-height — roll it by anything else and it skids. */
+const ROLL_RADIUS = PLAYER.height / 2;
 
 function createPool(scene, make) {
   const items = [];
@@ -42,7 +43,7 @@ function createPool(scene, make) {
  * draws is derived from a snapshot — it holds no state the run depends on, so
  * a restart is a `reset()` and nothing more.
  */
-export function createView({ scene, camera }) {
+export function createView({ scene, camera, studio }) {
   const egg = createEgg();
   const shadow = createShadow();
   const grid = createUnderGrid();
@@ -107,12 +108,13 @@ export function createView({ scene, camera }) {
     const s = clamp(squash.p, -0.45, 0.45);
 
     egg.object.position.set(player.x, player.y + PLAYER.height / 2, player.z);
+    /** The studio travels with the shell, so the light on it never drifts. */
+    studio?.position.set(player.x, player.y, player.z);
     egg.object.scale.set(1 + s * 0.4, 1 - s, 1 + s * 0.4);
     egg.object.scale.multiplyScalar(EGG_SCALE);
     egg.object.rotation.z = clamp((laneX(player.lane) - player.x) * -0.5, -0.45, 0.45);
 
     egg.body.rotation.x = player.z / ROLL_RADIUS;
-    egg.halo.rotation.y = time * 0.6;
 
     if (state === 'ready') {
       /** Nothing is running yet, so the egg does what Marc does: it rocks. */
