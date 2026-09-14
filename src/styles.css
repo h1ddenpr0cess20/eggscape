@@ -1,0 +1,203 @@
+:root {
+  --wire: #00ff41;
+  --dim: #0a8f2a;
+  --agent: #ff2b4a;
+  --glow: 0 0 8px rgba(0, 255, 65, 0.55);
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  color: var(--wire);
+  font-family: var(--mono);
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* The CRT it is all supposedly running on. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    repeating-linear-gradient(rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.28) 2px 4px),
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.75) 100%);
+  mix-blend-mode: multiply;
+}
+
+#hud {
+  position: fixed;
+  inset: max(12px, env(safe-area-inset-top)) 12px auto 12px;
+  z-index: 2;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-shadow: var(--glow);
+}
+
+.readout { display: flex; align-items: baseline; gap: 7px; }
+.readout .label { color: var(--dim); }
+.readout b { font-weight: 600; font-variant-numeric: tabular-nums; }
+#shells { letter-spacing: 0.12em; }
+#shells .spent { color: rgba(10, 143, 42, 0.35); }
+
+#mute {
+  position: fixed;
+  right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 2;
+  appearance: none;
+  border: 1px solid rgba(0, 255, 65, 0.35);
+  background: rgba(0, 20, 6, 0.5);
+  color: var(--dim);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+#mute:hover { color: var(--wire); border-color: var(--wire); }
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  background: radial-gradient(ellipse at center, rgba(0, 12, 3, 0.55) 0%, rgba(0, 0, 0, 0.9) 72%);
+}
+
+#overlay[hidden] { display: none; }
+
+#overlay-kicker {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--dim);
+  animation: blink 1.6s steps(2, end) infinite;
+}
+
+#overlay[data-state="over"] #overlay-kicker { color: var(--agent); }
+
+#overlay h1 {
+  margin: 0;
+  font-size: clamp(38px, 12vw, 86px);
+  line-height: 0.92;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(0, 255, 65, 0.6), 2px 0 0 rgba(255, 43, 74, 0.35), -2px 0 0 rgba(0, 180, 255, 0.25);
+}
+
+#overlay h1 em {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.26em;
+  font-style: normal;
+  letter-spacing: 0.62em;
+  color: var(--dim);
+  text-shadow: none;
+}
+
+#overlay-lead {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--dim);
+}
+
+#overlay-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 30px;
+  margin: 6px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+#overlay-stats[hidden] { display: none; }
+#overlay-stats .stat { display: flex; flex-direction: column; gap: 5px; min-width: 62px; }
+#overlay-stats dt { color: var(--dim); }
+#overlay-stats dd { margin: 0; font-size: 20px; font-variant-numeric: tabular-nums; text-shadow: var(--glow); }
+
+#play {
+  appearance: none;
+  margin-top: 10px;
+  padding: 12px 34px;
+  border: 1px solid var(--wire);
+  background: rgba(0, 255, 65, 0.08);
+  color: var(--wire);
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  text-shadow: var(--glow);
+  cursor: pointer;
+}
+#play:hover { background: rgba(0, 255, 65, 0.2); }
+#play:active { transform: translateY(1px); }
+
+#keys {
+  display: flex;
+  gap: 6px 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+}
+
+kbd {
+  display: inline-block;
+  min-width: 20px;
+  margin-right: 4px;
+  padding: 2px 5px;
+  border: 1px solid rgba(0, 255, 65, 0.35);
+  font: inherit;
+  font-size: 10px;
+  color: var(--wire);
+}
+
+.touch { display: none; }
+
+@keyframes blink { 50% { opacity: 0.25; } }
+
+@media (hover: none) {
+  #keys li:not(.touch) { display: none; }
+  .touch { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #overlay-kicker { animation: none; }
+}

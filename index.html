@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Eggscape the Matrix — a wireframe-green 3D runner. Roll, jump, dodge the agents, take the bits.">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Eggscape the Matrix</title>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div id="hud" aria-hidden="true">
+  <div class="readout"><span class="label">score</span><b id="score">0</b></div>
+  <div class="readout"><span class="label">depth</span><b id="depth">0m</b></div>
+  <div class="readout"><span class="label">bits</span><b id="bits">0</b></div>
+  <div class="readout"><span class="label">shells</span><b id="shells">◆◆◆</b></div>
+</div>
+
+<button id="mute" type="button" aria-pressed="false">audio on</button>
+
+<section id="overlay" data-state="ready" aria-live="polite">
+  <p id="overlay-kicker">wake up, marc…</p>
+  <h1>Eggscape<em>the matrix</em></h1>
+  <p id="overlay-lead">The carton was a simulation.</p>
+  <dl id="overlay-stats" hidden></dl>
+  <button id="play" type="button">enter</button>
+  <ul id="keys">
+    <li><kbd>A</kbd><kbd>D</kbd> lane</li>
+    <li><kbd>W</kbd> jump, twice to flip</li>
+    <li><kbd>S</kbd> slam</li>
+    <li><kbd>M</kbd> audio</li>
+    <li class="touch">swipe to move · tap to jump</li>
+  </ul>
+</section>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
