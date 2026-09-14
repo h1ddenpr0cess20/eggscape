@@ -37,7 +37,7 @@ body::after {
   pointer-events: none;
   z-index: 3;
   background:
-    repeating-linear-gradient(rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.28) 2px 4px),
+    repeating-linear-gradient(rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.16) 2px 4px),
     radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.75) 100%);
   mix-blend-mode: multiply;
 }

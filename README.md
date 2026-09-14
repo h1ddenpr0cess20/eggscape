@@ -3,9 +3,17 @@
 The egg got out. Everything on the other side is wireframe and green.
 
 A 3D runner-platformer in the browser: roll east down a course that builds
-itself, jump the holes, weave the agents, take the bits. The egg is the one
-from [Marc](https://github.com/h1ddenpr0cess20/marc) — same shell profile,
-drawn in lines instead of ceramic.
+itself, jump the holes, weave the agents, take the bits.
+
+The egg is [Marc's](https://github.com/h1ddenpr0cess20/marc), as he is — the
+same 128×96 shell through the same `shapeEgg` profile, the same 900-speckle
+cream skin, the same physical material with its clearcoat and sheen, lit by his
+studio rig. He is the only thing in here that is not made of lines, which is the
+point.
+
+He stays upright, too. The silhouette — fat end down, narrow end up — is the
+asset, so he rocks and turns on the spot instead of tumbling end over end, and
+the squash spring is allowed to flatten him but barely to stretch him.
 
 ![Eggscape the Matrix in a desktop browser](docs/screenshots/desktop.png)
 
@@ -58,14 +66,17 @@ src/
     course.js           The course, laid a pattern at a time, ahead of the egg
     player.js           Gravity, lanes, jump, coyote time, landings
     tuning.js           Every number the run is tuned by — the course reads it too
-    shape.js            Marc's egg profile, and the wireframe drawn from it
+    shape.js            Marc's egg profile, verbatim
     rng.js              A seeded stream, so a seed is a course
     motion.js           The spring and the chase everything eases on
     emitter.js
   render/             three.js. Reads snapshots, owns no game state
-    scene.js            Renderer, camera, fog, backdrop. No lights — it is all lines
+    scene.js            Renderer, camera, fog, backdrop, and the light for the egg
     view.js             Snapshot → scene graph, and the chase camera
-    egg.js              The shell: a black fill, and the lines over it
+    egg.js              Marc, fitted to the collider
+    shell.js            His geometry and material, carried over as they are
+    skin.js             His speckled cream, painted onto a canvas
+    environment.js      His studio, turned down and turned green
     props.js            Slabs, agents, bits, and the grid under the void
     rain.js             The backdrop, painted on a canvas
     materials.js        Four shared line materials

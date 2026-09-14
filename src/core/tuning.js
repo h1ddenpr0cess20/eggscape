@@ -36,7 +36,7 @@ export const COYOTE = 0.1;
 export const JUMP_BUFFER = 0.12;
 export const LANE_CHASE = 12;
 
-export const PLAYER = { radius: 0.44, height: 1.12 };
+export const PLAYER = { radius: 0.5, height: 1.4 };
 export const HAZARD = { halfWidth: 0.55, halfDepth: 0.45, height: 0.95 };
 export const BIT = { reach: 0.95, lift: 0.75 };
 
