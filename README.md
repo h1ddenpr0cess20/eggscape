@@ -7,8 +7,13 @@ itself, jump the holes, weave the agents, take the bits.
 
 The egg is [Marc's](https://github.com/h1ddenpr0cess20/marc), as he is — the
 same 128×96 shell through the same `shapeEgg` profile, the same 900-speckle
-cream skin, the same physical material with its clearcoat and sheen. He is the
-only thing in here that is not made of lines, which is the point.
+cream skin, the same physical material with its clearcoat and sheen, lit by his
+studio rig. He is the only thing in here that is not made of lines, which is the
+point.
+
+He stays upright, too. The silhouette — fat end down, narrow end up — is the
+asset, so he rocks and turns on the spot instead of tumbling end over end, and
+the squash spring is allowed to flatten him but barely to stretch him.
 
 ![Eggscape the Matrix in a desktop browser](docs/screenshots/desktop.png)
 
