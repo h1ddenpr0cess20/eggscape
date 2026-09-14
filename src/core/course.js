@@ -1,5 +1,5 @@
 import { createRng, intBelow, range } from './rng.js';
-import { AIRTIME, APEX, LANES, LANE_WIDTH, laneX, speedAt } from './tuning.js';
+import { AIRTIME, APEX, laneBounds, LANES, laneX, speedAt } from './tuning.js';
 
 /** The runway starts behind the egg, so there is floor under it at t=0. */
 const START_Z = -16;
@@ -55,8 +55,7 @@ export function createCourse({ seed = 1, difficultyRun = DIFFICULTY_RUN } = {}) 
       y,
       lane,
       span,
-      xMin: laneX(lane) - LANE_WIDTH / 2,
-      xMax: laneX(lane + span - 1) + LANE_WIDTH / 2,
+      ...laneBounds(lane, span),
     };
     segments.push(seg);
     cursor = seg.z1;

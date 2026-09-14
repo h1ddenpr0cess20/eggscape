@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 
 import { advance, createPlayer, respawn } from '../src/core/player.js';
 import {
-  AIRTIME, APEX, COYOTE, DIVE_SPEED, JUMP_BUFFER, LANES, LANE_WIDTH, laneX,
+  AIRTIME, APEX, COYOTE, DIVE_SPEED, JUMP_BUFFER, laneBounds, LANES, laneX,
   PLAYER, RUN, SNAP, speedAt, VOID_Y,
 } from '../src/core/tuning.js';
 
@@ -16,11 +16,7 @@ const DIVE = { left: false, right: false, jump: false, dive: true };
 
 /** A course of exactly one slab, so the physics has something to stand on. */
 function floor({ y = 0, z0 = -20, z1 = 500, lane = 0, span = LANES } = {}) {
-  const seg = {
-    id: 0, z0, z1, y, lane, span,
-    xMin: laneX(lane) - LANE_WIDTH / 2,
-    xMax: laneX(lane + span - 1) + LANE_WIDTH / 2,
-  };
+  const seg = { id: 0, z0, z1, y, lane, span, ...laneBounds(lane, span) };
   return {
     seg,
     groundAt(x, z) {

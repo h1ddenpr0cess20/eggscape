@@ -12,21 +12,42 @@ const KEYS = {
 
 const SWIPE = 26;
 
+/** The page's own controls. A press that lands on one is theirs, not the run's. */
+const CHROME = 'button, a, input, select, textarea, [data-chrome]';
+
 function blank() {
-  return { left: false, right: false, jump: false, dive: false };
+  return { left: 0, right: 0, jump: false, dive: false };
+}
+
+/** Lane presses count; jump and slam are flags. Pressing jump twice inside a
+ *  frame is still one jump, and pressing left twice is two lanes. */
+function record(frame, action) {
+  if (action === 'left' || action === 'right') frame[action] += 1;
+  else frame[action] = true;
+}
+
+/**
+ * Whether a pointer event belongs to the page rather than the course. Tapping
+ * `audio on` used to toggle the sound *and* jump the egg: `click` can be
+ * stopped from bubbling, but the pointer events under it are separate, and
+ * they reach the window either way.
+ */
+function onChrome(event) {
+  return Boolean(event.target?.closest?.(CHROME));
 }
 
 /**
  * Intents are edges, not held keys: leaning on → moves one lane, and holding
- * jump does not hover. `take()` hands the frame's edges to the first physics
- * tick and clears them, so a press is spent exactly once.
+ * jump does not hover. `take()` hands the frame's edges over and clears them;
+ * the game holds them until a fixed tick spends them, so a press is spent
+ * exactly once and never simply dropped.
  */
 export function createInput(target, { onConfirm = () => {} } = {}) {
   let pending = blank();
   let start = null;
 
   function press(action) {
-    if (action) pending[action] = true;
+    if (action) record(pending, action);
   }
 
   function onKeyDown(event) {
@@ -40,11 +61,17 @@ export function createInput(target, { onConfirm = () => {} } = {}) {
   }
 
   function onPointerDown(event) {
+    if (onChrome(event)) return;
     start = { x: event.clientX, y: event.clientY, t: event.timeStamp };
   }
 
   function onPointerUp(event) {
     if (!start) return;
+    /** A swipe that ended on a button is over, and is not also a jump. */
+    if (onChrome(event)) {
+      start = null;
+      return;
+    }
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
     start = null;
@@ -57,10 +84,14 @@ export function createInput(target, { onConfirm = () => {} } = {}) {
     onConfirm();
   }
 
+  function onPointerCancel() {
+    start = null;
+  }
+
   target.addEventListener('keydown', onKeyDown);
   target.addEventListener('pointerdown', onPointerDown);
   target.addEventListener('pointerup', onPointerUp);
-  target.addEventListener('pointercancel', () => { start = null; });
+  target.addEventListener('pointercancel', onPointerCancel);
 
   return {
     take() {
@@ -73,6 +104,7 @@ export function createInput(target, { onConfirm = () => {} } = {}) {
       target.removeEventListener('keydown', onKeyDown);
       target.removeEventListener('pointerdown', onPointerDown);
       target.removeEventListener('pointerup', onPointerUp);
+      target.removeEventListener('pointercancel', onPointerCancel);
     },
   };
 }

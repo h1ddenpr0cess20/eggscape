@@ -29,7 +29,7 @@ describe('input', () => {
       ['ArrowDown', 'dive'], ['KeyS', 'dive'],
     ]) {
       h.key(code);
-      assert.equal(h.input.take()[action], true, `${code} should mean ${action}`);
+      assert.ok(h.input.take()[action], `${code} should mean ${action}`);
     }
     h.close();
   });
@@ -45,7 +45,38 @@ describe('input', () => {
   it('ignores the key repeat a held key sends', () => {
     const h = harness();
     h.key('KeyD', { repeat: true });
-    assert.equal(h.input.take().right, false);
+    assert.ok(!h.input.take().right);
+    h.close();
+  });
+
+  it('counts lane presses, so a double tap inside one frame is two lanes', () => {
+    const h = harness();
+    h.key('KeyA');
+    h.key('KeyA');
+    h.key('KeyW');
+    h.key('KeyW');
+    const frame = h.input.take();
+    assert.equal(frame.left, 2, 'the second tap was swallowed');
+    assert.equal(frame.right, 0);
+    assert.equal(frame.jump, true, 'two jumps in a frame are still one jump');
+    assert.equal(h.input.take().left, 0);
+    h.close();
+  });
+
+  it('leaves the page its own buttons', () => {
+    const h = harness();
+    const button = h.window.document.createElement('button');
+    h.window.document.body.append(button);
+
+    button.dispatchEvent(new h.window.MouseEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }));
+    button.dispatchEvent(new h.window.MouseEvent('pointerup', { bubbles: true, clientX: 11, clientY: 11 }));
+    assert.ok(!h.input.take().jump, 'tapping a button jumped the egg');
+    assert.equal(h.confirms.length, 0, 'and started a run behind the button');
+
+    /** A swipe that strays onto a button is abandoned, not read as a tap. */
+    h.window.dispatchEvent(new h.window.MouseEvent('pointerdown', { clientX: 200, clientY: 300 }));
+    button.dispatchEvent(new h.window.MouseEvent('pointerup', { bubbles: true, clientX: 100, clientY: 300 }));
+    assert.equal(h.input.take().left, 0);
     h.close();
   });
 
@@ -53,10 +84,10 @@ describe('input', () => {
     const h = harness();
 
     h.swipe([200, 300], [100, 305]);
-    assert.equal(h.input.take().left, true);
+    assert.equal(h.input.take().left, 1);
 
     h.swipe([100, 300], [220, 296]);
-    assert.equal(h.input.take().right, true);
+    assert.equal(h.input.take().right, 1);
 
     h.swipe([150, 300], [152, 240]);
     assert.equal(h.input.take().jump, true);
@@ -87,7 +118,10 @@ describe('input', () => {
     const h = harness();
     h.input.dispose();
     h.key('KeyW');
-    assert.equal(h.input.take().jump, false);
+    h.swipe([200, 300], [100, 305]);
+    const frame = h.input.take();
+    assert.equal(frame.jump, false);
+    assert.equal(frame.left, 0);
     h.window.close();
   });
 });

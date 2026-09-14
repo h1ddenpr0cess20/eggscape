@@ -33,11 +33,19 @@ game.on('bit', () => {
   view.kick(0.7);
   sound.play('bit');
 });
+game.on('smash', () => {
+  view.kick(2.2);
+  view.jolt(0.35);
+  sound.play('smash');
+});
 game.on('hit', () => {
   view.kick(2.6);
   view.jolt(0.9);
   sound.play('hit');
 });
+/** The egg is put down metres further on, so the camera cuts rather than
+ *  chases — it used to spend the landing somewhere behind, pointed at void. */
+game.on('respawn', () => view.snap());
 game.on('over', (snapshot) => {
   best = writeBest(snapshot.score);
   hud.over(snapshot, best);
@@ -45,7 +53,10 @@ game.on('over', (snapshot) => {
 });
 
 function play() {
-  if (game.state !== 'running') game.start(seed());
+  if (game.state === 'running') return;
+  game.start(seed());
+  /** The press that started the run is not also the run's first jump. */
+  input.take();
 }
 
 const input = createInput(window, { onConfirm: play });

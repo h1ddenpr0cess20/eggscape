@@ -4,7 +4,7 @@ import {
   LANES, LANE_CHASE, laneX, SNAP, speedAt, VOID_Y,
 } from './tuning.js';
 
-const NONE = { left: false, right: false, jump: false, dive: false };
+const NONE = { left: 0, right: 0, jump: false, dive: false };
 
 export function createPlayer({ z = 0, lane = 1, y = 0 } = {}) {
   return {
@@ -37,8 +37,13 @@ export function advance(player, dt, intent, course) {
   player.speed = speedAt(player.z);
   player.z += player.speed * dt;
 
-  if (act.left) player.lane = Math.max(0, player.lane - 1);
-  if (act.right) player.lane = Math.min(LANES - 1, player.lane + 1);
+  /**
+   * Lanes move by however many presses arrived, not by one a tick: two taps
+   * inside a frame mean two lanes, which is what the hand that made them was
+   * asking for. A flag counts as the one press it is.
+   */
+  const step = Number(act.right ?? 0) - Number(act.left ?? 0);
+  if (step) player.lane = clamp(player.lane + step, 0, LANES - 1);
   player.x = approach(player.x, laneX(player.lane), LANE_CHASE, dt);
 
   player.buffer = act.jump ? JUMP_BUFFER : Math.max(0, player.buffer - dt);
@@ -65,6 +70,7 @@ export function advance(player, dt, intent, course) {
 
   const ground = course.groundAt(player.x, player.z);
   const was = player.grounded;
+  const slamming = player.diving;
   let landed = false;
 
   /**
@@ -83,7 +89,7 @@ export function advance(player, dt, intent, course) {
     player.grounded = false;
   }
 
-  return { jumped, landed, fell: player.y < VOID_Y, ground };
+  return { jumped, landed, slammed: landed && slamming, fell: player.y < VOID_Y, ground };
 }
 
 /** Put a fallen egg back on the first slab still ahead of it. */

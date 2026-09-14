@@ -39,7 +39,9 @@ export function createRain() {
     update(dt) {
       carry += dt;
       if (carry < TICK) return;
-      carry = 0;
+      /** Spend a tick, don't drop the remainder: zeroing it here cost the
+       *  rain a fifth of its speed at 60fps, and more the faster the display. */
+      carry = Math.min(carry - TICK, TICK);
 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
       ctx.fillRect(0, 0, SIZE, SIZE);
