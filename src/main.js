@@ -74,7 +74,9 @@ mute.addEventListener('click', (event) => {
   setMuted(!sound.muted);
 });
 addEventListener('keydown', (event) => {
-  if (event.code === 'KeyM') setMuted(!sound.muted);
+  /** A held key repeats, and a mute that flips thirty times a second is a
+   *  mute nobody can aim. */
+  if (event.code === 'KeyM' && !event.repeat) setMuted(!sound.muted);
 });
 
 /**

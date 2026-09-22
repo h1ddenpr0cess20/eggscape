@@ -76,8 +76,11 @@ export function createHazard() {
     wire(THEME.agent, 0.55),
   );
   core.position.y = HAZARD.height / 2;
-  core.name = 'core';
   group.add(core);
+
+  /** Handed over rather than looked up: the renderer turns this every frame
+   *  for every agent in shot, and a search of the group is a search. */
+  group.userData.core = core;
 
   return group;
 }
