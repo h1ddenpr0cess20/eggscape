@@ -5,8 +5,14 @@ const LEAD = {
   over: 'Connection terminated. The shell was never the problem.',
 };
 
+/** HTML-safe: every figure on this panel is one of our own numbers, but a
+ *  panel that writes unescaped strings is a habit worth not having. */
+function safe(text) {
+  return String(text).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
 function stat(label, value) {
-  return `<div class="stat"><dt>${label}</dt><dd>${value}</dd></div>`;
+  return `<div class="stat"><dt>${safe(label)}</dt><dd>${safe(value)}</dd></div>`;
 }
 
 function metres(value) {

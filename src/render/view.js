@@ -89,7 +89,7 @@ export function createView({ scene, camera, studio }) {
       if (hazard.z > player.z + DRAW.ahead) break;
       const mesh = agents.take();
       mesh.position.set(hazard.x, hazard.y, hazard.z);
-      mesh.getObjectByName('core').rotation.set(time * 0.9, time * 1.4, 0);
+      mesh.userData.core.rotation.set(time * 0.9, time * 1.4, 0);
     }
     agents.end();
 

@@ -163,7 +163,7 @@ export function createCourse({ seed = 1, difficultyRun = DIFFICULTY_RUN } = {}) 
     const roll = rng();
     if (roll < 0.18) runway();
     else if (roll < 0.42) slalom(d);
-    else if (roll < 0.62) chasm(d);
+    else if (roll < 0.62) chasm();
     else if (roll < 0.78) catwalk(d);
     else if (roll < 0.9) stack(d);
     else gauntlet(d);

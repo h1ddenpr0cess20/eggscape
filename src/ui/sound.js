@@ -31,7 +31,9 @@ export function createSound() {
       if (!voice || muted) return;
       const audio = context();
       if (!audio) return;
-      if (audio.state === 'suspended') audio.resume();
+      /** A resume that is refused is a run with no sound in it, not an
+       *  unhandled rejection in everybody's console. */
+      if (audio.state === 'suspended') audio.resume()?.catch(() => {});
 
       const now = audio.currentTime;
       const osc = audio.createOscillator();
@@ -44,6 +46,13 @@ export function createSound() {
       osc.connect(gain).connect(audio.destination);
       osc.start(now);
       osc.stop(now + voice.time + 0.02);
+      /** Off the graph once it has been heard. A run plays hundreds of
+       *  these, and every one of them stays wired to the destination
+       *  until it is let go of. */
+      osc.onended = () => {
+        osc.disconnect();
+        gain.disconnect();
+      };
     },
   };
 }
