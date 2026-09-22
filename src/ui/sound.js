@@ -14,11 +14,17 @@ export function createSound() {
   let ctx = null;
   let muted = false;
 
-  function context() {
-    if (ctx) return ctx;
-    const Ctor = globalThis.AudioContext ?? globalThis.webkitAudioContext;
-    if (!Ctor) return null;
-    ctx = new Ctor();
+  /** Built on the first call and woken on every one after, which is only
+   *  ever from inside a gesture: the one place a browser will start it. */
+  function wake() {
+    if (!ctx) {
+      const Ctor = globalThis.AudioContext ?? globalThis.webkitAudioContext;
+      if (!Ctor) return null;
+      ctx = new Ctor();
+    }
+    /** A resume that is refused is a run with no sound in it, not an
+     *  unhandled rejection in everybody's console. */
+    if (ctx.state === 'suspended') ctx.resume()?.catch(() => {});
     return ctx;
   }
 
@@ -26,14 +32,17 @@ export function createSound() {
     get muted() { return muted; },
     set muted(value) { muted = Boolean(value); },
 
+    /** Whatever a gesture has built so far, and null until one has. The music
+     *  plays on this and never builds it: it is never what was just pressed. */
+    get context() { return ctx; },
+
+    wake,
+
     play(name) {
       const voice = VOICES[name];
       if (!voice || muted) return;
-      const audio = context();
+      const audio = wake();
       if (!audio) return;
-      /** A resume that is refused is a run with no sound in it, not an
-       *  unhandled rejection in everybody's console. */
-      if (audio.state === 'suspended') audio.resume()?.catch(() => {});
 
       const now = audio.currentTime;
       const osc = audio.createOscillator();

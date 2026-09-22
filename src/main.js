@@ -7,7 +7,9 @@ import { createView } from './render/view.js';
 import { readBest, writeBest } from './ui/best.js';
 import { createHud } from './ui/hud.js';
 import { createInput } from './ui/input.js';
+import { createMusic } from './ui/music.js';
 import { createSound } from './ui/sound.js';
+import { SOUNDTRACK } from './ui/soundtrack.js';
 
 const seed = () => Math.floor(Math.random() * 1e6);
 
@@ -15,6 +17,7 @@ const stage = createScene(document.getElementById('stage'));
 const view = createView(stage);
 const hud = createHud(document, LIVES);
 const sound = createSound();
+const music = createMusic(SOUNDTRACK, sound);
 const game = createGame({ seed: seed() });
 
 let best = readBest();
@@ -23,6 +26,7 @@ game.on('start', () => {
   view.reset();
   hud.running();
   sound.play('start');
+  music.play('run');
 });
 game.on('jump', () => sound.play('jump'));
 game.on('land', () => {
@@ -42,6 +46,7 @@ game.on('hit', () => {
   view.kick(2.6);
   view.jolt(0.9);
   sound.play('hit');
+  music.duck();
 });
 /** The egg is put down metres further on, so the camera cuts rather than
  *  chases — it used to spend the landing somewhere behind, pointed at void. */
@@ -50,6 +55,7 @@ game.on('over', (snapshot) => {
   best = writeBest(snapshot.score);
   hud.over(snapshot, best);
   sound.play('over');
+  music.play('over');
 });
 
 function play() {
@@ -62,10 +68,17 @@ function play() {
 const input = createInput(window, { onConfirm: play });
 hud.onPlay(play);
 hud.ready(best);
+music.play('title');
+
+/** The title has music too, and no browser will play a note of it before
+ *  somebody has touched the page — so the first touch of anything wakes the
+ *  audio, rather than the first run. */
+for (const type of ['pointerup', 'keydown']) addEventListener(type, () => sound.wake(), { once: true });
 
 const mute = document.getElementById('mute');
 function setMuted(value) {
   sound.muted = value;
+  music.muted = value;
   mute.textContent = value ? 'audio off' : 'audio on';
   mute.setAttribute('aria-pressed', String(value));
 }
@@ -91,6 +104,7 @@ function frame(now) {
   last = now;
 
   const snapshot = game.advance(dt, input.take());
+  music.update(snapshot);
   view.sync(snapshot, dt, now / 1000);
   stage.tick(dt);
   hud.update(snapshot);
