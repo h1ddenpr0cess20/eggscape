@@ -54,6 +54,38 @@ your lane only, and only a couple of metres of it, so it has to be aimed.
   <img src="docs/screenshots/mobile.png" alt="Eggscape on a phone" width="300">
 </p>
 
+## The soundtrack
+
+There is no audio file in the repository, and there is music. `soundtrack.js`
+writes it down — one token per sixteenth, `e2 - . e3+g3+b3` — and `music.js`
+plays it on the same AudioContext the sound effects use, on instruments made
+of oscillators and noise. Nothing is built until the page has had a touch,
+because no browser will make a sound before one.
+
+It is psytrance — the sequels cut their fights to Juno Reactor — which is a
+kick on every beat and a bass rolling the three sixteenths between them, here
+in E minor, round Em Em C C Am Am F B. The F is the trick. It sits a semitone above home, where nothing
+that belongs in E minor lives, and it is what makes the loop sound like the
+code is wrong.
+
+It builds with depth. The first hundred metres are the kick and the bass. Then
+come the hats, the clap and the green rain — square-wave plinks three to a
+beat against four, so they never fall the same way twice in a bar — and at
+three hundred the pads and the data bleeps, and at six hundred the lead. Every
+layer comes in on a bar line, whatever metre it was earned on. An agent
+muffles the lot for a second. System failure is a chord that is not in the key
+and the power draining out of a saw; between runs it is the pod, the same
+chords slowed right down, and a heartbeat.
+
+The sequencer never plays anything at the moment it is asked to. It puts
+notes down a quarter of a second ahead on the audio clock, so a frame that
+hitches is not a note that arrives late — and further ahead than that when the
+frames are coming slowly, since a phone that is struggling is struggling on
+every one of them. A tab that comes back from the background drops what it
+missed and stays on the grid, rather than playing a minute of music at once.
+`M` mutes it with everything else, and it keeps time while it is off, so it
+comes back on the beat.
+
 ## How it holds together
 
 The run is a plain object graph with no pixels in it — course, egg, lives,
@@ -91,6 +123,8 @@ src/
     hud.js              The readouts and the panel between runs
     input.js            Keys and swipes → one frame of intent
     sound.js            Four oscillators' worth of arcade
+    music.js            A sequencer that reads its parts out of strings
+    soundtrack.js       Psytrance in E minor, and a heartbeat for the title
     best.js             The only thing that survives a run
 test/                 node:test, including an autopilot that proves seeds are fair
 ```
@@ -118,7 +152,7 @@ cannot get a few hundred metres down a seed.
 | `npm run dev` | Vite |
 | `npm run build` | Bundles to `dist/` |
 | `npm run preview` | Serves the build |
-| `npm test` | `node:test` over the core, the HUD and the page |
+| `npm test` | `node:test` over the core, the HUD, the page and the music |
 | `npm run lint` | ESLint |
 
 CI runs the lint, the tests on Node 22.12 and 24, and a build that then has to
