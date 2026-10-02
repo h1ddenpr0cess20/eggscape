@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { Texture } from '../gpu/texture.js';
 
 const GLYPHS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ﾊﾋﾌﾍﾎabcdefgh';
 const SIZE = 512;
@@ -28,8 +28,7 @@ export function createRain() {
   ctx.font = `${Math.round(step * 0.92)}px ui-monospace, monospace`;
   ctx.textBaseline = 'top';
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
+  const texture = new Texture(canvas);
 
   let carry = 0;
 

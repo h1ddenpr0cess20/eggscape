@@ -26,7 +26,8 @@ npm install
 npm run dev               # → http://localhost:5173
 ```
 
-No API keys, no server, no account. It is a static page and three.js.
+No API keys, no server, no account, and no libraries: it is a static page with
+its own renderer — WebGPU where the browser has it, WebGL 2 where it does not.
 
 ## Play
 
@@ -90,7 +91,7 @@ comes back on the beat.
 
 The run is a plain object graph with no pixels in it — course, egg, lives,
 score — and the renderer reads a snapshot of it every frame. Nothing in
-`src/core/` imports three.js or touches the DOM, which is why a seed can be
+`src/core/` touches the GPU or the DOM, which is why a seed can be
 played out headlessly in a test and asserted on.
 
 ```
@@ -98,7 +99,7 @@ index.html            Markup only — Vite's entry
 src/
   main.js             The wiring, and nothing else
   styles.css          The HUD, and the CRT it pretends to be on
-  core/               The game. No three.js, no DOM, no randomness it did not seed
+  core/               The game. No GPU, no DOM, no randomness it did not seed
     game.js             Lives, score, pickups, and real seconds → fixed ticks
     course.js           The course, laid a pattern at a time, ahead of the egg
     player.js           Gravity, lanes, jump, coyote time, landings
@@ -107,7 +108,7 @@ src/
     rng.js              A seeded stream, so a seed is a course
     motion.js           The spring and the chase everything eases on
     emitter.js
-  render/             three.js. Reads snapshots, owns no game state
+  render/             The Matrix, built out of gpu/. Reads snapshots, owns no game state
     scene.js            Renderer, camera, fog, backdrop, and the light for the egg
     view.js             Snapshot → scene graph, and the chase camera
     rig.js              Where that camera sits and what it looks at, as arithmetic
@@ -119,6 +120,20 @@ src/
     rain.js             The backdrop, painted on a canvas
     materials.js        Four shared line materials
     theme.js            One colour, and the two warnings
+  gpu/                The renderer. Knows nothing about eggs
+    renderer.js         Picks WebGPU or WebGL 2, and draws a scene with either
+    frame.js            What is visible, in what order, and every uniform byte
+    webgpu.js           The WebGPU backend
+    webgl.js            The WebGL 2 backend
+    graph.js            Nodes, meshes, lines, lights, the camera
+    geometry.js         Vertex data, and the spheres, cylinders and rings
+    material.js         Lit, unlit and line materials, as plain data
+    texture.js          A canvas and how to sample it
+    environment.js      His studio, prefiltered into a ladder of blurs
+    dfg.js              The table the specular highlight is read from
+    math.js             Vectors and double-precision matrices
+    color.js            sRGB in, linear light inside, sRGB out
+    shaders/            The GLSL and the WGSL, one of each
   ui/
     hud.js              The readouts and the panel between runs
     input.js            Keys and swipes → one frame of intent
@@ -147,12 +162,49 @@ There is also an autopilot in `test/helpers/pilot.js`. It plays badly on
 purpose — one frame of lookahead, no double jump — and the suite fails if it
 cannot get a few hundred metres down a seed.
 
+### It draws its own pixels
+
+There is no 3D library in here. `src/gpu/` is a renderer written for this world
+and nothing else: a scene graph, three shaders — lit, unlit, and the
+backdrop — and two backends that draw them. WebGPU is tried first; a browser
+without it, or one whose WebGPU will not start, gets WebGL 2, and
+`?renderer=webgl` or `?renderer=webgpu` in the address picks one by hand. The
+shaders are in `src/gpu/shaders/`, as `.glsl` for WebGL and `.wgsl` for
+WebGPU, and they are the same shaders twice: change a constant in one and
+change it in the other.
+
+The two backends cannot disagree about what to draw, because neither of them
+decides. `frame.js` walks the scene once a frame, culls it, sorts it — solid
+things first, see-through things far to near — and packs every uniform into
+blocks of vec4s and mat4s that std140 and WGSL lay out byte for byte the same.
+A backend only says *draw this*. `test/gpu.test.js` reads the GLSL and the
+WGSL and fails if either has drifted from what `frame.js` packs.
+
+Everything in the world but the egg is one-pixel lines added onto the black,
+and that is what the GPU draws them as — native lines, additive, faded into
+the black by the fog before they are added, so a slab at a hundred metres is
+a slab at a tenth of the brightness rather than a slab behind a curtain. The
+deck under them is a black fill pushed a hair back in depth, so a rung on its
+top surface is never fighting it for a pixel. The rain is a canvas stretched
+over the whole frame behind everything, at a third of its brightness.
+
+The lighting is the lighting Marc was made under, kept term for term: GGX specular with
+multiple-scattering compensation read off the same DFG table, Charlie sheen
+and the clearcoat on Marc's shell, fog mixed in after the encode. The
+environment the lit surfaces reflect is prefiltered into a cube-UV ladder of
+seven blurs by GGX importance sampling — on the CPU, in a worker, because the
+cube is sixteen texels a side — and the shaders pick a rung by roughness
+through the same curve as before. Rendered side by side with the build that
+used a library, frame for frame down a seeded run, the WebGL picture agrees
+with it to within one level in 255, and the WebGPU one differs only in which
+pixels along an antialiased edge get a sample.
+
 | Script | |
 |---|---|
 | `npm run dev` | Vite |
 | `npm run build` | Bundles to `dist/` |
 | `npm run preview` | Serves the build |
-| `npm test` | `node:test` over the core, the HUD, the page and the music |
+| `npm test` | `node:test` over the core, the renderer, the HUD, the page and the music |
 | `npm run lint` | ESLint |
 
 CI runs the lint, the tests on Node 22.12 and 24, and a build that then has to

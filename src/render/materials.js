@@ -1,5 +1,6 @@
-import * as THREE from 'three';
-
+import { Geometry } from '../gpu/geometry.js';
+import { Lines } from '../gpu/graph.js';
+import { BasicMaterial, LineMaterial } from '../gpu/material.js';
 import { THEME } from './theme.js';
 
 const lines = new Map();
@@ -8,11 +9,11 @@ const lines = new Map();
 export function wire(color, opacity = 1) {
   const key = `${color}:${opacity}`;
   if (!lines.has(key)) {
-    lines.set(key, new THREE.LineBasicMaterial({
+    lines.set(key, new LineMaterial({
       color,
       transparent: opacity < 1,
       opacity,
-      blending: THREE.AdditiveBlending,
+      blending: 'additive',
       depthWrite: false,
     }));
   }
@@ -21,7 +22,7 @@ export function wire(color, opacity = 1) {
 
 /** The black the wireframe sits on, so the far side of a thing stays hidden. */
 export function fill(color = THEME.void, opacity = 1) {
-  return new THREE.MeshBasicMaterial({
+  return new BasicMaterial({
     color,
     transparent: opacity < 1,
     opacity,
@@ -32,7 +33,5 @@ export function fill(color = THEME.void, opacity = 1) {
 }
 
 export function segments(positions, material) {
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  return new THREE.LineSegments(geometry, material);
+  return new Lines(new Geometry({ position: positions }), material);
 }

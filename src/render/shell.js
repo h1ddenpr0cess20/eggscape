@@ -1,6 +1,7 @@
-import * as THREE from 'three';
-
 import { shapeEgg } from '../core/shape.js';
+import { sphere } from '../gpu/geometry.js';
+import { Mesh } from '../gpu/graph.js';
+import { PhysicalMaterial } from '../gpu/material.js';
 import { createShellSkin } from './skin.js';
 
 /**
@@ -12,15 +13,15 @@ import { createShellSkin } from './skin.js';
  * point: the egg is the thing that does not belong here.
  */
 export function createShell() {
-  const skin = createShellSkin(THREE);
+  const skin = createShellSkin();
 
-  const geometry = new THREE.SphereGeometry(1, 128, 96);
-  shapeEgg(geometry.attributes.position.array);
+  const geometry = sphere(1, 128, 96);
+  shapeEgg(geometry.position);
   geometry.computeVertexNormals();
 
-  const material = new THREE.MeshPhysicalMaterial({
+  const material = new PhysicalMaterial({
     name: 'eggshell',
-    color: new THREE.Color(skin.map ? '#ffffff' : '#f0e3cd'),
+    color: skin.map ? '#ffffff' : '#f0e3cd',
     map: skin.map,
     bumpMap: skin.bumpMap,
     bumpScale: 0.7,
@@ -29,10 +30,10 @@ export function createShell() {
     clearcoat: 0.35,
     clearcoatRoughness: 0.6,
     sheen: 0.4,
-    sheenColor: new THREE.Color('#fff2dd'),
+    sheenColor: '#fff2dd',
   });
 
-  const mesh = new THREE.Mesh(geometry, material);
+  const mesh = new Mesh(geometry, material);
   mesh.name = 'shell';
 
   return { mesh, geometry, material };

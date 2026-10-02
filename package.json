@@ -14,9 +14,6 @@
     "test": "node --test \"test/**/*.test.js\"",
     "lint": "eslint ."
   },
-  "dependencies": {
-    "three": "^0.185.1"
-  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.9.1",

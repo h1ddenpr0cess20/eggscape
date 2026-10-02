@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-
 import { HAZARD, LANE_WIDTH } from '../core/tuning.js';
+import { octahedronEdges, plane } from '../gpu/geometry.js';
+import { Group, Lines, Mesh } from '../gpu/graph.js';
 import { fill, segments, wire } from './materials.js';
 import { THEME } from './theme.js';
 
@@ -25,7 +25,7 @@ function box(out, x0, x1, y0, y1, z0, z1) {
  * keep their spacing, and a run only ever has a dozen slabs in the air.
  */
 export function createSlab(seg) {
-  const group = new THREE.Group();
+  const group = new Group();
   group.name = `slab-${seg.id}`;
 
   const w = seg.xMax - seg.xMin;
@@ -45,7 +45,7 @@ export function createSlab(seg) {
   }
   if (grid.length) group.add(segments(new Float32Array(grid), wire(THEME.dim, 0.75)));
 
-  const deck = new THREE.Mesh(new THREE.PlaneGeometry(w, l), fill(0x021007, 0.92));
+  const deck = new Mesh(plane(w, l), fill(0x021007, 0.92));
   deck.rotation.x = -Math.PI / 2;
   deck.position.y = -0.01;
   deck.renderOrder = -1;
@@ -55,26 +55,21 @@ export function createSlab(seg) {
   return group;
 }
 
-/** Line materials are shared and stay; the deck's fill belongs to this slab. */
+/** Materials are plain data and need no freeing; the geometry is this slab's
+ *  own, and its buffers go back to the GPU with it. */
 export function disposeSlab(group) {
-  group.traverse((node) => {
-    node.geometry?.dispose();
-    if (node.isMesh) node.material.dispose();
-  });
+  group.traverse((node) => node.geometry?.dispose());
 }
 
 /** An agent: a cage with something turning inside it. */
 export function createHazard() {
-  const group = new THREE.Group();
+  const group = new Group();
 
   const cage = [];
   box(cage, -HAZARD.halfWidth, HAZARD.halfWidth, 0, HAZARD.height, -HAZARD.halfDepth, HAZARD.halfDepth);
   group.add(segments(new Float32Array(cage), wire(THEME.agent, 0.9)));
 
-  const core = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.OctahedronGeometry(0.34)),
-    wire(THEME.agent, 0.55),
-  );
+  const core = new Lines(octahedronEdges(0.34), wire(THEME.agent, 0.55));
   core.position.y = HAZARD.height / 2;
   group.add(core);
 
@@ -87,10 +82,7 @@ export function createHazard() {
 
 /** A bit: the loose data the egg is out here collecting. */
 export function createBit() {
-  const bit = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.OctahedronGeometry(0.3, 0)),
-    wire(THEME.bit, 0.95),
-  );
+  const bit = new Lines(octahedronEdges(0.3), wire(THEME.bit, 0.95));
   bit.name = 'bit';
   return bit;
 }
