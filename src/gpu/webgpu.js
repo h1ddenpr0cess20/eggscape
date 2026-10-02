@@ -41,7 +41,7 @@ const BLENDS = {
   },
 };
 
-export async function createWebGPU(canvas, { clear, antialias }) {
+export async function createWebGPU(canvas, { clear, antialias, lost }) {
   const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
   if (!adapter) throw new Error('no WebGPU adapter');
   const device = await adapter.requestDevice();
@@ -69,7 +69,11 @@ export async function createWebGPU(canvas, { clear, antialias }) {
   context.configure({ device, format, alphaMode: 'opaque' });
 
   device.addEventListener('uncapturederror', (event) => console.error('WebGPU:', event.error.message));
-  device.lost.then((info) => console.error('WebGPU device lost:', info.message));
+  device.lost.then((info) => {
+    if (info.reason === 'destroyed') return;
+    console.error('WebGPU device lost:', info.message);
+    lost?.();
+  });
 
   const samples = antialias ? 4 : 1;
   const both = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT;

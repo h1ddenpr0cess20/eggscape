@@ -29,6 +29,29 @@ export function createRenderer(canvas, { clearColor = 0x000000, antialias = true
     return chosen?.name ?? null;
   });
 
+  /**
+   * A GPU can be taken away — a driver reset, or a phone reclaiming memory
+   * from a tab in the background. Everything drawn is rebuilt from the scene
+   * on the next frame anyway, so coming back is a matter of making a new
+   * backend on the same canvas and letting it upload everything again.
+   */
+  settings.lost = () => {
+    backend = null;
+    import('./webgpu.js')
+      .then(({ createWebGPU }) => createWebGPU(canvas, settings))
+      .then((fresh) => { backend = fresh; })
+      .catch((error) => console.error('WebGPU did not come back.', error));
+  };
+  canvas.addEventListener?.('webglcontextlost', (event) => {
+    event.preventDefault();
+    backend = null;
+  });
+  canvas.addEventListener?.('webglcontextrestored', () => {
+    import('./webgl.js')
+      .then(({ createWebGL }) => { backend = createWebGL(canvas, settings); })
+      .catch((error) => console.error('WebGL did not come back.', error));
+  });
+
   return {
     canvas,
     /** Resolves to 'webgpu', 'webgl', or null when neither would start. */
