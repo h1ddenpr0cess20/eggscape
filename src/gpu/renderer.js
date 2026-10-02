@@ -2,8 +2,14 @@ import { display } from './color.js';
 import { createFrameBuilder } from './frame.js';
 
 /**
- * The renderer: WebGPU where the browser has it, WebGL 2 where it does not,
- * and the same picture out of either.
+ * The renderer: WebGPU or WebGL 2, whichever draws this game better on the
+ * machine it is running on, and the same picture out of either.
+ *
+ * "Better" comes down to antialiasing. WebGPU multisamples at 4× and no
+ * more; Chrome on a desktop GPU gives a WebGL canvas 8×, which is what these
+ * games were tuned under. So where WebGL can sample more than 4×, WebGL draws
+ * — on a phone, where it usually cannot, WebGPU does — and either one falls
+ * back to the other if it will not start.
  *
  * Choosing takes a moment — WebGPU hands over its device asynchronously — so
  * the renderer exists at once and starts drawing when a backend is ready.
@@ -97,23 +103,40 @@ function preference() {
   }
 }
 
-async function choose(canvas, settings) {
-  const wanted = preference();
+/**
+ * How many samples a WebGL canvas could multisample with here, asked of a
+ * throwaway context that is given straight back.
+ */
+function webglSamples() {
+  try {
+    const gl = document.createElement('canvas').getContext('webgl2');
+    if (!gl) return 0;
+    const samples = gl.getParameter(gl.MAX_SAMPLES);
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    return samples;
+  } catch {
+    return 0;
+  }
+}
 
-  if (wanted !== 'webgl' && globalThis.navigator?.gpu) {
+async function choose(canvas, settings) {
+  const wanted = preference() ?? (webglSamples() > 4 ? 'webgl' : 'webgpu');
+  const order = wanted === 'webgl' ? ['webgl', 'webgpu'] : ['webgpu', 'webgl'];
+
+  for (const name of order) {
     try {
-      const { createWebGPU } = await import('./webgpu.js');
-      return await createWebGPU(canvas, settings);
+      if (name === 'webgpu') {
+        if (!globalThis.navigator?.gpu) continue;
+        const { createWebGPU } = await import('./webgpu.js');
+        return await createWebGPU(canvas, settings);
+      }
+      const { createWebGL } = await import('./webgl.js');
+      return createWebGL(canvas, settings);
     } catch (error) {
-      console.warn('WebGPU would not start; drawing with WebGL instead.', error);
+      console.warn(`${name === 'webgpu' ? 'WebGPU' : 'WebGL 2'} would not start.`, error);
     }
   }
 
-  try {
-    const { createWebGL } = await import('./webgl.js');
-    return createWebGL(canvas, settings);
-  } catch (error) {
-    console.error('Neither WebGPU nor WebGL 2 would start, so there is nothing to draw with.', error);
-    return null;
-  }
+  console.error('Neither WebGPU nor WebGL 2 would start, so there is nothing to draw with.');
+  return null;
 }

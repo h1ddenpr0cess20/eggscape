@@ -27,7 +27,7 @@ npm run dev               # → http://localhost:5173
 ```
 
 No API keys, no server, no account, and no libraries: it is a static page with
-its own renderer — WebGPU where the browser has it, WebGL 2 where it does not.
+its own renderer, drawing with WebGPU or WebGL 2.
 
 ## Play
 
@@ -166,8 +166,11 @@ cannot get a few hundred metres down a seed.
 
 There is no 3D library in here. `src/gpu/` is a renderer written for this world
 and nothing else: a scene graph, three shaders — lit, unlit, and the
-backdrop — and two backends that draw them. WebGPU is tried first; a browser
-without it, or one whose WebGPU will not start, gets WebGL 2, and
+backdrop — and two backends that draw them. Which one draws comes down to
+antialiasing: WebGPU multisamples at 4× and no more, while Chrome gives a
+WebGL canvas 8× on a desktop GPU, which is what the game was tuned under. So
+where WebGL can sample more than 4× it draws, and elsewhere — most phones —
+WebGPU does. Either falls back to the other if it will not start, and
 `?renderer=webgl` or `?renderer=webgpu` in the address picks one by hand. The
 shaders are in `src/gpu/shaders/`, as `.glsl` for WebGL and `.wgsl` for
 WebGPU, and they are the same shaders twice: change a constant in one and
