@@ -1,3 +1,5 @@
+import { Texture } from '../gpu/texture.js';
+
 /**
  * The speckled cream skin, verbatim from Marc (src/client/egg/skin.js):
  * painted once onto a canvas, a colour map and a bump map off the same
@@ -18,7 +20,7 @@ function canvas2d(width, height) {
   return ctx ? { el, ctx } : null;
 }
 
-export function createShellSkin(THREE, { width = WIDTH, height = HEIGHT, random = Math.random } = {}) {
+export function createShellSkin({ width = WIDTH, height = HEIGHT, random = Math.random } = {}) {
   const colour = canvas2d(width, height);
   const bump = canvas2d(width, height);
   if (!colour || !bump) return INERT;
@@ -49,10 +51,8 @@ export function createShellSkin(THREE, { width = WIDTH, height = HEIGHT, random 
     b.fill();
   }
 
-  const map = new THREE.CanvasTexture(colour.el);
-  map.colorSpace = THREE.SRGBColorSpace;
-  map.anisotropy = 4;
-  const bumpMap = new THREE.CanvasTexture(bump.el);
+  const map = new Texture(colour.el, { anisotropy: 4 });
+  const bumpMap = new Texture(bump.el, { srgb: false });
 
   return { map, bumpMap };
 }

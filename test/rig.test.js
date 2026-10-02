@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import * as THREE from 'three';
-
 import { LANES, laneX } from '../src/core/tuning.js';
+import { PerspectiveCamera } from '../src/gpu/graph.js';
+import { Vec3 } from '../src/gpu/math.js';
 import { focus, rigFor, seat, TALL, WIDE } from '../src/render/rig.js';
 
 /**
@@ -17,13 +17,12 @@ import { focus, rigFor, seat, TALL, WIDE } from '../src/render/rig.js';
 function ndcX(lane, { aspect = 16 / 9, z = 0, ahead = 0 } = {}) {
   const player = { x: laneX(1), y: 0, z, lane: 1 };
   const rig = rigFor(aspect);
-  const camera = new THREE.PerspectiveCamera(aspect < 1 ? 64 : 52, aspect, 0.1, 260);
+  const camera = new PerspectiveCamera(aspect < 1 ? 64 : 52, aspect, 0.1, 260);
 
-  camera.position.copy(seat(new THREE.Vector3(), player, 0, rig));
-  camera.lookAt(focus(new THREE.Vector3(), player, 0, rig));
-  camera.updateMatrixWorld(true);
+  camera.position.copy(seat(new Vec3(), player, 0, rig));
+  camera.lookAt(focus(new Vec3(), player, 0, rig));
 
-  return new THREE.Vector3(laneX(lane), 0.7, z + ahead).project(camera).x;
+  return new Vec3(laneX(lane), 0.7, z + ahead).project(camera).x;
 }
 
 describe('the chase camera', () => {
@@ -49,8 +48,8 @@ describe('the chase camera', () => {
   it('sits behind the egg and looks past it, which is what does the mirroring', () => {
     for (const rig of [WIDE, TALL]) {
       const player = { x: 0, y: 0, z: 100 };
-      assert.ok(seat(new THREE.Vector3(), player, 0, rig).z < player.z, 'the camera got in front');
-      assert.ok(focus(new THREE.Vector3(), player, 0, rig).z > player.z, 'it is looking backwards');
+      assert.ok(seat(new Vec3(), player, 0, rig).z < player.z, 'the camera got in front');
+      assert.ok(focus(new Vec3(), player, 0, rig).z > player.z, 'it is looking backwards');
     }
   });
 

@@ -2,7 +2,7 @@
  * Where the chase camera sits and what it looks at, as plain arithmetic.
  *
  * It lives apart from the rest of the renderer so the framing can be asserted
- * without a WebGL context, and there is one thing worth asserting: the camera
+ * without a GPU, and there is one thing worth asserting: the camera
  * sits *behind* the egg and looks the way the egg runs, down +z. That mirrors
  * the view — world +x lands on the left of the screen — which is the whole
  * reason `laneX` descends with the lane index.

@@ -1,4 +1,5 @@
-import * as THREE from 'three';
+import { prefilterInBackground } from '../gpu/environment.js';
+import { DirectionalLight, Group, HemisphereLight } from '../gpu/graph.js';
 
 /**
  * Marc's studio, verbatim from src/client/egg/environment.js — a warm sky, a
@@ -6,7 +7,7 @@ import * as THREE from 'three';
  * shell is lit by the room it was made in, because that is what makes it read
  * as ceramic instead of as a pale blob.
  */
-export function buildEnvironment(scene, renderer) {
+export function buildEnvironment(scene) {
   try {
     const c = document.createElement('canvas');
     c.width = 64; c.height = 32;
@@ -17,13 +18,7 @@ export function buildEnvironment(scene, renderer) {
     ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 32);
     ctx.fillStyle = 'rgba(255,247,232,0.95)'; ctx.beginPath();
     ctx.ellipse(20, 6, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
-    const tex = new THREE.Texture(c);
-    tex.mapping = THREE.EquirectangularReflectionMapping;
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.needsUpdate = true;
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    scene.environment = pmrem.fromEquirectangular(tex).texture;
-    pmrem.dispose(); tex.dispose();
+    scene.environment = prefilterInBackground(c);
   } catch {
   }
 }
@@ -37,15 +32,15 @@ export function buildEnvironment(scene, renderer) {
  * metres as it is at the start line.
  */
 export function buildLights(scene) {
-  const rig = new THREE.Group();
+  const rig = new Group();
   rig.name = 'studio';
 
-  const hemi = new THREE.HemisphereLight(0xffffff, 0xd8d2c4, 1.0);
+  const hemi = new HemisphereLight(0xffffff, 0xd8d2c4, 1.0);
 
-  const key = new THREE.DirectionalLight(0xffffff, 2.2);
+  const key = new DirectionalLight(0xffffff, 2.2);
   key.position.set(4, 7, 5);
 
-  const fill = new THREE.DirectionalLight(0xfff4e6, 0.5);
+  const fill = new DirectionalLight(0xfff4e6, 0.5);
   fill.position.set(-5, 3, -4);
 
   rig.add(hemi, key, key.target, fill, fill.target);

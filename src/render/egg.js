@@ -1,7 +1,6 @@
-import * as THREE from 'three';
-
 import { EGG_HEIGHT } from '../core/shape.js';
 import { PLAYER } from '../core/tuning.js';
+import { Group } from '../gpu/graph.js';
 import { segments, wire } from './materials.js';
 import { createShell } from './shell.js';
 import { THEME } from './theme.js';
@@ -16,12 +15,12 @@ export const EGG_SCALE = PLAYER.height / EGG_HEIGHT;
  * green and the shell should admit it.
  */
 export function createEgg() {
-  const egg = new THREE.Group();
+  const egg = new Group();
   egg.name = 'egg';
 
   const shell = createShell();
 
-  const body = new THREE.Group();
+  const body = new Group();
   body.name = 'body';
   body.add(shell.mesh);
 

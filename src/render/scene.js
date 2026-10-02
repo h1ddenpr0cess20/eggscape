@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-
+import { PerspectiveCamera, Scene } from '../gpu/graph.js';
+import { createRenderer } from '../gpu/renderer.js';
 import { buildEnvironment, buildLights } from './environment.js';
 import { createRain } from './rain.js';
 import { THEME } from './theme.js';
@@ -10,20 +10,19 @@ import { THEME } from './theme.js';
  * fill and would look the same in the dark.
  */
 export function createScene(canvas) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  renderer.setClearColor(THEME.void, 1);
+  const renderer = createRenderer(canvas, { clearColor: THEME.void, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 
-  const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(THEME.void, 26, 108);
+  const scene = new Scene();
+  scene.fog = { color: THEME.void, near: 26, far: 108 };
 
   /** 52°, not the 64° this started on: a wide lens stretches whatever sits
    *  away from the middle of the frame, and what sits there is the egg. */
-  const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 260);
+  const camera = new PerspectiveCamera(52, 1, 0.1, 260);
   camera.position.set(0, 3.2, -8.4);
 
   const studio = buildLights(scene);
-  buildEnvironment(scene, renderer);
+  buildEnvironment(scene);
 
   const rain = createRain();
   if (rain) {
